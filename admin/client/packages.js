@@ -22,6 +22,7 @@ module.exports = [
 	'numeral',
 	'qs',
 	'react-addons-css-transition-group',
+	'react-alt-text',
 	'react-color',
 	'react-day-picker',
 	'react-dnd-html5-backend',

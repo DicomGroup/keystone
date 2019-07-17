@@ -1,6 +1,7 @@
 import {
 	SELECT_ITEM,
 	LOAD_DATA,
+	DRAFT_LOADED,
 	DATA_LOADING_SUCCESS,
 	DATA_LOADING_ERROR,
 	DRAG_MOVE_ITEM,
@@ -87,6 +88,14 @@ export function dataLoaded (data) {
 	return {
 		type: DATA_LOADING_SUCCESS,
 		loadingRef: null,
+		data,
+	};
+}
+
+export function draftLoaded (id, data) {
+	return {
+		type: DRAFT_LOADED,
+		id,
 		data,
 	};
 }

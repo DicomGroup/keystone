@@ -5,6 +5,7 @@ import assign from 'object-assign';
 import {
 	SELECT_ITEM,
 	LOAD_DATA,
+	DRAFT_LOADED,
 	DATA_LOADING_SUCCESS,
 	DATA_LOADING_ERROR,
 	DRAG_MOVE_ITEM,
@@ -37,6 +38,10 @@ function item (state = initialState, action) {
 		case LOAD_DATA:
 			return assign({}, state, {
 				loading: true,
+			});
+		case DRAFT_LOADED:
+			return assign({}, state, {
+				data: action.data,
 			});
 		case DATA_LOADING_SUCCESS:
 			Keystone.item = action.data; // Fix keystone filter

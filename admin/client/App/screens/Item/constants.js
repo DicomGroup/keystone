@@ -1,5 +1,6 @@
 export const SELECT_ITEM = 'app/Item/SELECT_ITEM';
 export const LOAD_DATA = 'app/Item/LOAD_DATA';
+export const DRAFT_LOADED = 'app/Item/DRAFT_LOADED';
 export const DATA_LOADING_SUCCESS = 'app/Item/DATA_LOADING_SUCCESS';
 export const DATA_LOADING_ERROR = 'app/Item/DATA_LOADING_ERROR';
 export const DRAG_MOVE_ITEM = 'app/Item/DRAG_MOVE_ITEM';

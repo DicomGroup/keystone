@@ -22,7 +22,7 @@ import AltText from './AltText';
 import FooterBar from './FooterBar';
 import InvalidFieldType from '../../../shared/InvalidFieldType';
 
-import { deleteItem } from '../actions';
+import { deleteItem, draftLoaded } from '../actions';
 
 import { upcase } from '../../../../utils/string';
 
@@ -55,6 +55,7 @@ var EditForm = React.createClass({
 	displayName: 'EditForm',
 	propTypes: {
 		data: React.PropTypes.object,
+		draftList: React.PropTypes.object,
 		list: React.PropTypes.object,
 	},
 	getInitialState () {
@@ -62,11 +63,15 @@ var EditForm = React.createClass({
 			values: assign({}, this.props.data.fields),
 			confirmationDialog: null,
 			loading: false,
+			loadingDraft: false,
 			lastValues: null, // used for resetting
 			focusFirstField: !this.props.list.nameField && !this.props.list.nameFieldIsFormHeader,
+			draft: false,
+			draftLoaded: false,
 		};
 	},
 	componentDidMount () {
+		this.checkDraft();
 		this.__isMounted = true;
 	},
 	componentWillUnmount () {
@@ -149,6 +154,7 @@ var EditForm = React.createClass({
 
 		list.updateItem(data.id, formData, (err, data) => {
 			smoothScrollTop();
+			this.checkDraft();
 			if (err) {
 				this.setState({
 					alerts: {
@@ -169,6 +175,78 @@ var EditForm = React.createClass({
 					values: data.fields,
 					loading: false,
 				});
+			}
+		});
+	},
+	checkDraft () {
+		this.props.list.getDraft(this.props.data.id, (err, draftRes) => {
+
+			// No draft?
+			if (!draftRes.hasDraft) {
+				this.setState({
+					draft: false,
+				});
+			}
+
+			this.setState({
+				draft: draftRes.draft,
+			});
+		});
+	},
+	loadDraft () {
+		if (!this.state.draft) {
+			return;
+		}
+
+		this.setState({ loadingDraft: true });
+
+		this.props.draftList.loadItem(this.state.draft, { drilldown: true }, (err, itemData) => {
+			if (!err && itemData) {
+				itemData.id = this.props.data.id;
+
+				this.setState({ loadingDraft: false, draftLoaded: true });
+				this.props.dispatch(draftLoaded(this.state.draft, itemData));
+			} else if (console && console.log) {
+				console.log('Loading Draft Error: ', err, itemData);
+			}
+		});
+	},
+	saveDraft (callback) {
+		if (this.state.loading || this.state.loadingDraft) {
+			return;
+		}
+
+		const { data, list } = this.props;
+		const editForm = this.refs.editForm;
+		const formData = new FormData(editForm);
+
+		// Show loading indicator
+		this.setState({ loading: true });
+
+		return list.saveDraft(data.id, formData, (err, data) => {
+			console.log(data.fields);
+			smoothScrollTop();
+			if (err) {
+				this.setState({
+					alerts: {
+						error: err,
+					},
+					loading: false,
+				});
+			} else {
+				this.setState({
+					alerts: {
+						success: {
+							success: 'Draft saved successfully.',
+						},
+					},
+					loading: false,
+					values: data.fields,
+				});
+			}
+
+			if (callback) {
+				callback();
 			}
 		});
 	},
@@ -271,13 +349,36 @@ var EditForm = React.createClass({
 			}
 		}, this);
 	},
+	openPreview () {
+		if (!this.props.list.previewUrl) {
+			return;
+		}
+
+		this.saveDraft(() => {
+			const previewUrl = this.props.list.previewUrl
+				.replace('{id}', this.props.data.id)
+				.replace('{lang}', this.state.values.lang)
+			;
+
+			event.preventDefault();
+			this.setState({
+				previewUrl: previewUrl,
+				previewDialogIsOpen: true,
+			});
+		});
+	},
 	renderFooterBar () {
 		if (this.props.list.noedit && this.props.list.nodelete) {
 			return null;
 		}
 
-		const { loading } = this.state;
+		const { loading, loadingDraft, draftLoaded } = this.state;
 		const loadingButtonText = loading ? 'Saving' : 'Save';
+		const loadingDraftButtonText = loadingDraft ? 'Loading' : (draftLoaded ? 'Reload Draft' : 'Load Draft');
+		const saveDraftButtonText = loading ? 'Saving' : 'Save as Draft';
+		const canLoadDraft = !!this.state.draft;
+		const canSaveDraft = !!this.props.list.draft;
+		const canPreview = !!(this.props.list.draft && this.props.list.previewUrl);
 
 		// Padding must be applied inline so the FooterBar can determine its
 		// innerHeight at runtime. Aphrodite's styling comes later...
@@ -295,9 +396,45 @@ var EditForm = React.createClass({
 						>
 							{loadingButtonText}
 						</LoadingButton>
+						{canLoadDraft && (
+							<LoadingButton
+								color="warning"
+								disabled={loading || loadingDraft}
+								loading={loadingDraft}
+								onClick={this.loadDraft}
+								data-button="update"
+								style={{ marginLeft: '10px' }}
+							>
+								{loadingDraftButtonText}
+							</LoadingButton>
+						)}
+						{canSaveDraft && (
+							<LoadingButton
+								color="primary"
+								disabled={loading || loadingDraft}
+								loading={loading}
+								onClick={() => this.saveDraft()}
+								data-button="update"
+								style={{ marginLeft: '5px' }}
+							>
+								{saveDraftButtonText}
+							</LoadingButton>
+						)}
+						{canPreview && (
+							<LoadingButton
+								color="default"
+								disabled={loading || loadingDraft}
+								loading={loadingDraft}
+								onClick={this.openPreview}
+								data-button="update"
+								style={{ marginLeft: '5px' }}
+							>
+								Preview
+							</LoadingButton>
+						)}
 					)}
 					{!this.props.list.noedit && (
-						<Button disabled={loading} onClick={this.toggleResetDialog} variant="link" color="cancel" data-button="reset">
+						<Button disabled={loading || loadingDraft} onClick={this.toggleResetDialog} variant="link" color="cancel" data-button="reset">
 							<ResponsiveText
 								hiddenXS="reset changes"
 								visibleXS="reset"
@@ -305,7 +442,7 @@ var EditForm = React.createClass({
 						</Button>
 					)}
 					{!this.props.list.nodelete && (
-						<Button disabled={loading} onClick={this.toggleDeleteDialog} variant="link" color="delete" style={styles.deleteButton} data-button="delete">
+						<Button disabled={loading || loadingDraft} onClick={this.toggleDeleteDialog} variant="link" color="delete" style={styles.deleteButton} data-button="delete">
 							<ResponsiveText
 								hiddenXS={`delete ${this.props.list.singular.toLowerCase()}`}
 								visibleXS="delete"
@@ -400,6 +537,16 @@ var EditForm = React.createClass({
 					<Grid.Col large="one-quarter"><span /></Grid.Col>
 				</Grid.Row>
 				{this.renderFooterBar()}
+				<ConfirmationDialog
+					isOpen={this.state.previewDialogIsOpen}
+					confirmationLabel="Open in New Tab"
+					confirmationType="primary"
+					cancelLabel="Close"
+					onCancel={() => this.setState({ previewDialogIsOpen: false })}
+					onConfirmation={() => this.removeConfirmationDialog() && window.open(this.state.previewUrl)}
+				>
+					<p>Preview Ready.<br/><br/>Click 'Open in New Tab' to open the preview in a new browser tab</p>
+				</ConfirmationDialog>
 				<ConfirmationDialog
 					confirmationLabel="Reset"
 					isOpen={this.state.resetDialogIsOpen}

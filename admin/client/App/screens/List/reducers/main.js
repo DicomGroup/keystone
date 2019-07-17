@@ -1,5 +1,6 @@
 import assign from 'object-assign';
 import List from '../../../../utils/List';
+import { listsByKey } from '../../../../utils/lists';
 import {
 	SELECT_LIST,
 	ITEMS_LOADED,
@@ -69,6 +70,7 @@ function lists (state = initialState, action) {
 		case SELECT_LIST:
 			const list = state.data[action.id];
 			list.id = action.id;
+			let draft = null;
 			let items = {
 				results: [],
 				count: null,
@@ -78,8 +80,14 @@ function lists (state = initialState, action) {
 			if (list.items.count !== null) {
 				items = list.items;
 			}
+
+			// Drafts?
+			if (list.draft) {
+				draft = listsByKey[list.draft];
+			}
 			return assign({}, state, {
 				currentList: list,
+				draftList: draft,
 				ready: false,
 				items: items,
 				page: {

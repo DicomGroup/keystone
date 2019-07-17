@@ -136,6 +136,23 @@ List.prototype.updateItem = function (id, formData, callback) {
 	});
 };
 
+List.prototype.saveDraft = function (id, formData, callback) {
+	xhr({
+		url: `${Keystone.adminPath}/api/${this.path}/${id}/saveDraft`,
+		responseType: 'json',
+		method: 'POST',
+		headers: assign({}, Keystone.csrf.header),
+		body: formData,
+	}, (err, resp, data) => {
+		if (err) return callback(err);
+		if (resp.statusCode === 200) {
+			callback(null, data);
+		} else {
+			callback(data);
+		}
+	});
+};
+
 List.prototype.expandColumns = function (input) {
 	let nameIncluded = false;
 	const cols = listToArray(input).map(i => {
@@ -257,6 +274,22 @@ List.prototype.loadItems = function (options, callback) {
 		responseType: 'json',
 	}, (err, resp, data) => {
 		if (err) callback(err);
+		// Pass the data as result or error, depending on the statusCode
+		if (resp.statusCode === 200) {
+			callback(null, data);
+		} else {
+			callback(data);
+		}
+	});
+};
+
+List.prototype.getDraft = function (itemId, callback) {
+	let url = Keystone.adminPath + '/api/' + this.path + '/' + itemId + '/getDraft';
+	xhr({
+		url: url,
+		responseType: 'json',
+	}, (err, resp, data) => {
+		if (err) return callback(err);
 		// Pass the data as result or error, depending on the statusCode
 		if (resp.statusCode === 200) {
 			callback(null, data);

@@ -87,6 +87,11 @@ module.exports = function IndexRoute (req, res) {
 		locals.cloudinaryScript = cloudinary.cloudinary_js_config();
 	};
 
+	var imageSteamConfig = keystone.get('imageSteam');
+	if (imageSteamConfig) {
+		keystoneData.imageSteam = keystone.get('imageSteam');
+	}
+
 	ejs.renderFile(templatePath, locals, { delimiter: '%' }, function (err, str) {
 		if (err) {
 			console.error('Could not render Admin UI Index Template:', err);
