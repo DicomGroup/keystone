@@ -26,7 +26,7 @@ import { deleteItem, draftLoaded } from '../actions';
 
 import { upcase } from '../../../../utils/string';
 
-function getNameFromData (data) {
+function getNameFromData(data) {
 	if (typeof data === 'object') {
 		if (typeof data.first === 'string' && typeof data.last === 'string') {
 			return data.first + ' ' + data.last;
@@ -37,7 +37,7 @@ function getNameFromData (data) {
 	return data;
 }
 
-function smoothScrollTop () {
+function smoothScrollTop() {
 	var position = window.scrollY || window.pageYOffset;
 	var speed = position / 10;
 
@@ -58,7 +58,7 @@ var EditForm = React.createClass({
 		draftList: React.PropTypes.object,
 		list: React.PropTypes.object,
 	},
-	getInitialState () {
+	getInitialState() {
 		return {
 			values: assign({}, this.props.data.fields),
 			confirmationDialog: null,
@@ -70,14 +70,14 @@ var EditForm = React.createClass({
 			draftLoaded: false,
 		};
 	},
-	componentDidMount () {
+	componentDidMount() {
 		this.checkDraft();
 		this.__isMounted = true;
 	},
-	componentWillUnmount () {
+	componentWillUnmount() {
 		this.__isMounted = false;
 	},
-	getFieldProps (field) {
+	getFieldProps(field) {
 		const props = assign({}, field);
 		const alerts = this.state.alerts;
 		// Display validation errors inline
@@ -95,43 +95,43 @@ var EditForm = React.createClass({
 		props.mode = 'edit';
 		return props;
 	},
-	handleChange (event) {
+	handleChange(event) {
 		const values = assign({}, this.state.values);
 
 		values[event.path] = event.value;
 		this.setState({ values });
 	},
 
-	toggleDeleteDialog () {
+	toggleDeleteDialog() {
 		this.setState({
 			deleteDialogIsOpen: !this.state.deleteDialogIsOpen,
 		});
 	},
-	toggleResetDialog () {
+	toggleResetDialog() {
 		this.setState({
 			resetDialogIsOpen: !this.state.resetDialogIsOpen,
 		});
 	},
-	handleReset () {
+	handleReset() {
 		this.setState({
 			values: assign({}, this.state.lastValues || this.props.data.fields),
 			resetDialogIsOpen: false,
 		});
 	},
-	handleDelete () {
+	handleDelete() {
 		const { data } = this.props;
 		this.props.dispatch(deleteItem(data.id, this.props.router));
 	},
-	handleKeyFocus () {
+	handleKeyFocus() {
 		const input = this.refs.keyOrIdInput;
 		input.select();
 	},
-	removeConfirmationDialog () {
+	removeConfirmationDialog() {
 		this.setState({
 			confirmationDialog: null,
 		});
 	},
-	updateItem () {
+	updateItem() {
 		const { data, list } = this.props;
 		const editForm = this.refs.editForm;
 
@@ -178,7 +178,7 @@ var EditForm = React.createClass({
 			}
 		});
 	},
-	checkDraft () {
+	checkDraft() {
 		this.props.list.getDraft(this.props.data.id, (err, draftRes) => {
 
 			// No draft?
@@ -193,7 +193,7 @@ var EditForm = React.createClass({
 			});
 		});
 	},
-	loadDraft () {
+	loadDraft() {
 		if (!this.state.draft) {
 			return;
 		}
@@ -211,7 +211,7 @@ var EditForm = React.createClass({
 			}
 		});
 	},
-	saveDraft (callback) {
+	saveDraft(callback) {
 		if (this.state.loading || this.state.loadingDraft) {
 			return;
 		}
@@ -250,7 +250,7 @@ var EditForm = React.createClass({
 			}
 		});
 	},
-	renderKeyOrId () {
+	renderKeyOrId() {
 		var className = 'EditForm__key-or-id';
 		var list = this.props.list;
 
@@ -289,7 +289,7 @@ var EditForm = React.createClass({
 			);
 		}
 	},
-	renderNameField () {
+	renderNameField() {
 		var nameField = this.props.list.nameField;
 		var nameFieldIsFormHeader = this.props.list.nameFieldIsFormHeader;
 		var wrapNameField = field => (
@@ -316,7 +316,7 @@ var EditForm = React.createClass({
 			);
 		}
 	},
-	renderFormElements () {
+	renderFormElements() {
 		var headings = 0;
 
 		return this.props.list.uiElements.map((el, index) => {
@@ -349,7 +349,7 @@ var EditForm = React.createClass({
 			}
 		}, this);
 	},
-	openPreview () {
+	openPreview() {
 		if (!this.props.list.previewUrl) {
 			return;
 		}
@@ -358,7 +358,7 @@ var EditForm = React.createClass({
 			const previewUrl = this.props.list.previewUrl
 				.replace('{id}', this.props.data.id)
 				.replace('{lang}', this.state.values.lang)
-			;
+				;
 
 			event.preventDefault();
 			this.setState({
@@ -367,7 +367,7 @@ var EditForm = React.createClass({
 			});
 		});
 	},
-	renderFooterBar () {
+	renderFooterBar() {
 		if (this.props.list.noedit && this.props.list.nodelete) {
 			return null;
 		}
@@ -396,42 +396,42 @@ var EditForm = React.createClass({
 						>
 							{loadingButtonText}
 						</LoadingButton>
-						{canLoadDraft && (
-							<LoadingButton
-								color="warning"
-								disabled={loading || loadingDraft}
-								loading={loadingDraft}
-								onClick={this.loadDraft}
-								data-button="update"
-								style={{ marginLeft: '10px' }}
-							>
-								{loadingDraftButtonText}
+					)}
+					{canLoadDraft && (
+						<LoadingButton
+							color="warning"
+							disabled={loading || loadingDraft}
+							loading={loadingDraft}
+							onClick={this.loadDraft}
+							data-button="update"
+							style={{ marginLeft: '10px' }}
+						>
+							{loadingDraftButtonText}
+						</LoadingButton>
+					)}
+					{canSaveDraft && (
+						<LoadingButton
+							color="primary"
+							disabled={loading || loadingDraft}
+							loading={loading}
+							onClick={() => this.saveDraft()}
+							data-button="update"
+							style={{ marginLeft: '5px' }}
+						>
+							{saveDraftButtonText}
+						</LoadingButton>
+					)}
+					{canPreview && (
+						<LoadingButton
+							color="default"
+							disabled={loading || loadingDraft}
+							loading={loadingDraft}
+							onClick={this.openPreview}
+							data-button="update"
+							style={{ marginLeft: '5px' }}
+						>
+							Preview
 							</LoadingButton>
-						)}
-						{canSaveDraft && (
-							<LoadingButton
-								color="primary"
-								disabled={loading || loadingDraft}
-								loading={loading}
-								onClick={() => this.saveDraft()}
-								data-button="update"
-								style={{ marginLeft: '5px' }}
-							>
-								{saveDraftButtonText}
-							</LoadingButton>
-						)}
-						{canPreview && (
-							<LoadingButton
-								color="default"
-								disabled={loading || loadingDraft}
-								loading={loadingDraft}
-								onClick={this.openPreview}
-								data-button="update"
-								style={{ marginLeft: '5px' }}
-							>
-								Preview
-							</LoadingButton>
-						)}
 					)}
 					{!this.props.list.noedit && (
 						<Button disabled={loading || loadingDraft} onClick={this.toggleResetDialog} variant="link" color="cancel" data-button="reset">
@@ -453,7 +453,7 @@ var EditForm = React.createClass({
 			</FooterBar>
 		);
 	},
-	renderTrackingMeta () {
+	renderTrackingMeta() {
 		// TODO: These fields are visible now, so we don't want this. We may revisit
 		// it when we have more granular control over hiding fields in certain
 		// contexts, so I'm leaving this code here as a reference for now - JW
@@ -521,7 +521,7 @@ var EditForm = React.createClass({
 			</div>
 		) : null;
 	},
-	render () {
+	render() {
 		return (
 			<form ref="editForm" className="EditForm-container">
 				{(this.state.alerts) ? <AlertMessages alerts={this.state.alerts} /> : null}
@@ -545,7 +545,7 @@ var EditForm = React.createClass({
 					onCancel={() => this.setState({ previewDialogIsOpen: false })}
 					onConfirmation={() => this.removeConfirmationDialog() && window.open(this.state.previewUrl)}
 				>
-					<p>Preview Ready.<br/><br/>Click 'Open in New Tab' to open the preview in a new browser tab</p>
+					<p>Preview Ready.<br /><br />Click 'Open in New Tab' to open the preview in a new browser tab</p>
 				</ConfirmationDialog>
 				<ConfirmationDialog
 					confirmationLabel="Reset"
